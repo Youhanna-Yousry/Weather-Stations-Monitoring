@@ -1,14 +1,18 @@
-package services.Impl;
+package service.Impl;
 
-import DTO.StationStatusMessageDTO;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import dto.CompactStationMsgDTO;
+import dto.StationStatusMsgDTO;
+import mapper.Mapper;
+import mapper.MapperImpl;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
-import services.BaseStation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import service.BaseStation;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -24,7 +28,9 @@ public class BaseStationImpl implements BaseStation {
     private static final String AUTO_COMMIT_INTERVAL = "1000";
     private static final String AUTO_OFFSET_RESET = "earliest";
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final Mapper mapper = new MapperImpl();
+    private final Logger logger = LoggerFactory.getLogger(BaseStationImpl.class);
+
 
 //    private void produceMessage() {
 //        Properties props = new Properties();
@@ -32,15 +38,14 @@ public class BaseStationImpl implements BaseStation {
 //        props.put("key.serializer", LongSerializer.class.getName());
 //        props.put("value.serializer", ByteArraySerializer.class.getName());
 //
-//        ObjectMapper mapper = new ObjectMapper();
-//
 //
 //        // create a producer that send the message(key = message id, value = message content) to the topic
 //        try (Producer<Long, byte[]> producer = new KafkaProducer<>(props)) {
 //            for (int i = 0; i < 5; i++) {
-//                StationStatusMessageDTO dto = new StationStatusMessageDTO(1, 1, "good", 1, new WeatherDTO(1, 1, 1));
-//                String message = mapper.writeValueAsString(dto);
-//                producer.send(new ProducerRecord<>(TOPIC, 1000L, message.getBytes()));
+//                CompactStationMsgDTO compactMessage = new CompactStationMsgDTO(1, "good", new WeatherDTO(1, 1, 1));
+//                System.out.println(compactMessage);
+//                byte[] messageBytes =  new ObjectMapper().writeValueAsBytes(compactMessage);
+//                producer.send(new ProducerRecord<>(TOPIC, 1000L, messageBytes));
 //                producer.flush();
 //            }
 //        } catch (JsonProcessingException e) {
@@ -70,13 +75,19 @@ public class BaseStationImpl implements BaseStation {
             while (true) {
                 ConsumerRecords<Long, byte[]> records = consumer.poll(Duration.ofMillis(1000));
                 for (ConsumerRecord<Long, byte[]> record : records) {
-                    StationStatusMessageDTO message = mapper.readValue(record.value(), StationStatusMessageDTO.class);
+                    System.out.println("Message bytes length: " + record.value().length);
+                    CompactStationMsgDTO compactMessage = mapper.deserializeCompactStationMsg(record.value());
+                    StationStatusMsgDTO message = mapper.compactStationMsgToStationStatusMsg(
+                                    compactMessage,
+                                    record.key(),
+                                    record.timestamp());
+                    System.out.println(message);
                     // TODO archive the message in parquet files
                     // TODO archive the message in bitcask
                 }
             }
         } catch (IOException e) {
-            System.exit(1);
+            logger.error(e.getMessage());
         }
     }
 

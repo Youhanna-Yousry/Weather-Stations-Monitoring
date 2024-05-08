@@ -1,22 +1,17 @@
-package DTO;
+package dto;
 
 import lombok.*;
-
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class StationStatusMessageDTO {
-
-    long stationId;
+public class CompactStationMsgDTO {
 
     long sequenceNumber;
 
     String batteryStatus;
-
-    long statusTimestamp;
 
     WeatherDTO weather;
 }
