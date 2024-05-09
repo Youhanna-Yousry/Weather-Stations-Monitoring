@@ -1,5 +1,6 @@
 package dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Getter
@@ -13,5 +14,6 @@ public class WeatherDTO {
 
     int temperature;
 
+    @JsonProperty("wind_speed")
     int windSpeed;
 }
