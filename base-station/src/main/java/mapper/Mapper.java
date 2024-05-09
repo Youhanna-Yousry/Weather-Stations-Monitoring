@@ -8,6 +8,7 @@ import java.io.IOException;
 
 @org.mapstruct.Mapper
 public interface Mapper {
+
     ObjectMapper mapper = new ObjectMapper();
 
     default CompactStationMsgDTO deserializeCompactStationMsg(byte[] byteArray) throws IOException {
