@@ -2,5 +2,5 @@ package consumer;
 
 public interface BaseStationConsumer {
 
-    void consumerMessage();
+    void consumeMessage();
 }

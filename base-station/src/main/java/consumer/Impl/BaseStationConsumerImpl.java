@@ -50,7 +50,7 @@ public class BaseStationConsumerImpl implements BaseStationConsumer {
     }
 
     @Override
-    public void consumerMessage() {
+    public void consumeMessage() {
         Properties props = getProperties();
 
         try (KafkaConsumer<Long, byte[]> consumer = new KafkaConsumer<>(props)) {
