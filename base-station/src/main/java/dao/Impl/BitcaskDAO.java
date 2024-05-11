@@ -24,7 +24,8 @@ public class BitcaskDAO implements DAO {
     private final Logger logger;
     private final Mapper mapper;
     private final Map<Long, KeyDirValue> keyDir;
-    private File activeFile;
+    private RandomAccessFile activeFile;
+    private long activeFileID;
 
     @Inject
     public BitcaskDAO(Logger logger, Mapper mapper) {
@@ -39,23 +40,30 @@ public class BitcaskDAO implements DAO {
             // TODO: Read the existing hint files and load them into memory
             logger.info("Bitcask directory already exists");
         }
-
-        activeFile = new File(BITCASK_BASE_DIRECTORY + "/" + System.currentTimeMillis());
+        createActiveFile();
     }
 
     private void createDirectory() {
         if (!new File(BITCASK_BASE_DIRECTORY).mkdir()) {
             String message = "Failed to create the bitcask directory";
             logger.severe(message);
-            throw new RuntimeException(message);
+            System.exit(1);
+        }
+    }
+
+    private void createActiveFile() {
+        try {
+            this.activeFileID = System.currentTimeMillis();
+            File file = new File(BITCASK_BASE_DIRECTORY + "/" + this.activeFileID);
+            this.activeFile = new RandomAccessFile(file, "rws");
+        } catch (IOException e) {
+            logger.severe("Failed to create the active bitcask file");
+            System.exit(1);
         }
     }
 
     @Override
     public void write(StationStatusMsgDTO stationStatusMsgDTO) {
-        if (activeFile.length() >= MAX_FILE_SIZE) {
-            activeFile = new File(BITCASK_BASE_DIRECTORY + "/" + System.currentTimeMillis());
-        }
 
         byte[] serializedValue;
         try {
@@ -65,20 +73,28 @@ public class BitcaskDAO implements DAO {
             return;
         }
 
-        try (RandomAccessFile randomAccessFile = new RandomAccessFile(activeFile, "rw")) {
+        try {
+            if (activeFile.length() >= MAX_FILE_SIZE) {
+                activeFile.close();
+                createActiveFile();
+            }
+
+            activeFile.seek(activeFile.length());
+
             long key = stationStatusMsgDTO.getStationId();
             long timestamp = System.currentTimeMillis();
 
-            randomAccessFile.writeLong(timestamp);
-            randomAccessFile.writeShort(KEY_SIZE);
-            randomAccessFile.writeLong(key);
-            randomAccessFile.writeShort(serializedValue.length);
-            long offset = randomAccessFile.getFilePointer();
-            randomAccessFile.write(serializedValue);
+            activeFile.writeLong(timestamp);
+            activeFile.writeShort(KEY_SIZE);
+            activeFile.writeLong(key);
+            activeFile.writeShort(serializedValue.length);
+            long offset = activeFile.getFilePointer();
+            activeFile.write(serializedValue);
 
-            keyDir.put(key, new KeyDirValue(activeFile.getName(), (short) serializedValue.length, offset, timestamp));
+            keyDir.put(key, new KeyDirValue(this.activeFileID, (short) serializedValue.length, offset, timestamp));
         } catch (IOException e) {
             logger.severe("Failed to write to the bitcask file");
+            System.exit(1);
         }
 
     }

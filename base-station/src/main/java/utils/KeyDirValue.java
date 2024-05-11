@@ -9,10 +9,12 @@ import java.nio.ByteBuffer;
 @Getter
 public class KeyDirValue {
 
-    private String fileID;
+    private long fileID;
     private short valueSize;
     private long valueOffset;
     private long timestamp;
+
+    public static final int SIZE = (Short.SIZE  + 3*Long.SIZE) / Byte.SIZE;
 
     public KeyDirValue(byte[] bytes) {
         byte[] fileIDBytes = new byte[8];
@@ -25,7 +27,7 @@ public class KeyDirValue {
         System.arraycopy(bytes, fileIDBytes.length + valueSizeBytes.length, valueOffsetBytes, 0, valueOffsetBytes.length);
         System.arraycopy(bytes, fileIDBytes.length + valueSizeBytes.length + valueOffsetBytes.length, timestampBytes, 0, timestampBytes.length);
 
-        fileID = new String(fileIDBytes);
+        fileID = ByteBuffer.wrap(fileIDBytes).getLong();
         valueSize = ByteBuffer.wrap(valueSizeBytes).getShort();
         valueOffset = ByteBuffer.wrap(valueOffsetBytes).getLong();
         timestamp = ByteBuffer.wrap(timestampBytes).getLong();
@@ -33,7 +35,7 @@ public class KeyDirValue {
 
 
     private byte[] getBytes() {
-        byte[] fileIDBytes = fileID.getBytes();
+        byte[] fileIDBytes = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(fileID).array();
         byte[] valueSizeBytes = ByteBuffer.allocate(Short.SIZE / Byte.SIZE).putShort(valueSize).array();
         byte[] valueOffsetBytes = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(valueOffset).array();
         byte[] timestampBytes = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(timestamp).array();
