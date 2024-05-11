@@ -24,12 +24,13 @@ public class WeatherStationImpl implements WeatherStation {
     private static final String TOPIC = "weather-station-topic";
     private static final String BOOTSTRAP_SERVER = "localhost:9092";
     private final AtomicInteger sequenceNumber = new AtomicInteger(0);
-    private final long stationID;
+    private final long stationID ;
     private final String latitude;
     private final String longitude;
     private List<WeatherDTO> hourlyWeather;
     private int currentIndex = 0;
     private static final Random RANDOM = new Random();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger logger = LoggerFactory.getLogger(WeatherStationImpl.class);
     public WeatherStationImpl(String latitude, String longitude){
         this.stationID = UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
@@ -54,7 +55,7 @@ public class WeatherStationImpl implements WeatherStation {
                         WeatherDTO weather = hourlyWeather.get(currentIndex++);
                         String batteryStatus = getBatteryStatus();
                         CompactStationMsgDTO compactMessage = new CompactStationMsgDTO(sequenceNumber.incrementAndGet(), batteryStatus, weather);
-                        byte[] messageBytes = new ObjectMapper().writeValueAsBytes(compactMessage);
+                        byte[] messageBytes = OBJECT_MAPPER.writeValueAsBytes(compactMessage);
                         producer.send(new ProducerRecord<>(TOPIC, stationID, messageBytes));
                         producer.flush();
                         logger.info("Sent: {}", compactMessage);
