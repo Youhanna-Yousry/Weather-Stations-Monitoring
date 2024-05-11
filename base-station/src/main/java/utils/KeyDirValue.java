@@ -34,18 +34,20 @@ public class KeyDirValue {
     }
 
 
-    private byte[] getBytes() {
+    private byte[] serializeEntry(long key) {
+        byte[] keyBytes = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(key).array();
         byte[] fileIDBytes = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(fileID).array();
         byte[] valueSizeBytes = ByteBuffer.allocate(Short.SIZE / Byte.SIZE).putShort(valueSize).array();
         byte[] valueOffsetBytes = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(valueOffset).array();
         byte[] timestampBytes = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(timestamp).array();
 
-        byte[] result = new byte[fileIDBytes.length + valueSizeBytes.length + valueOffsetBytes.length + timestampBytes.length];
+        byte[] result = new byte[keyBytes.length + fileIDBytes.length + valueSizeBytes.length + valueOffsetBytes.length + timestampBytes.length];
 
-        System.arraycopy(fileIDBytes, 0, result, 0, fileIDBytes.length);
-        System.arraycopy(valueSizeBytes, 0, result, fileIDBytes.length, valueSizeBytes.length);
-        System.arraycopy(valueOffsetBytes, 0, result, fileIDBytes.length + valueSizeBytes.length, valueOffsetBytes.length);
-        System.arraycopy(timestampBytes, 0, result, fileIDBytes.length + valueSizeBytes.length + valueOffsetBytes.length, timestampBytes.length);
+        System.arraycopy(keyBytes, 0, result, 0, keyBytes.length);
+        System.arraycopy(fileIDBytes, 0, result, keyBytes.length, fileIDBytes.length);
+        System.arraycopy(valueSizeBytes, 0, result, keyBytes.length + fileIDBytes.length, valueSizeBytes.length);
+        System.arraycopy(valueOffsetBytes, 0, result, keyBytes.length + fileIDBytes.length + valueSizeBytes.length, valueOffsetBytes.length);
+        System.arraycopy(timestampBytes, 0, result, keyBytes.length + fileIDBytes.length + valueSizeBytes.length + valueOffsetBytes.length, timestampBytes.length);
 
         return result;
     }
