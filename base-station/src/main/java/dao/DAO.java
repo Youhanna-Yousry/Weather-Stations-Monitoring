@@ -6,4 +6,6 @@ import dto.StationStatusMsgDTO;
 public interface DAO {
 
     void write(StationStatusMsgDTO stationStatusMsgDTO);
+
+    StationStatusMsgDTO read(long stationId);
 }
