@@ -11,8 +11,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 public class BitcaskDAO implements DAO {
 
@@ -37,9 +39,10 @@ public class BitcaskDAO implements DAO {
             createDirectory();
             logger.info("Created the bitcask directory successfully");
         } else {
-            // TODO: Read the existing hint files and load them into memory
+            loadHintFiles();
             logger.info("Bitcask directory already exists");
         }
+
         createActiveFile();
     }
 
@@ -47,7 +50,31 @@ public class BitcaskDAO implements DAO {
         if (!new File(BITCASK_BASE_DIRECTORY).mkdir()) {
             String message = "Failed to create the bitcask directory";
             logger.severe(message);
-            System.exit(1);
+        }
+    }
+
+    private void loadHintFiles() {
+        Pattern pattern = Pattern.compile("hint-\\d+");
+
+        for (File file: Objects.requireNonNull(new File(BITCASK_BASE_DIRECTORY).listFiles())) {
+            if (!file.isFile() || !pattern.matcher(file.getName()).matches()) {
+                continue;
+            }
+            try (RandomAccessFile hintFile = new RandomAccessFile(file, "r")) {
+                while (hintFile.getFilePointer() < hintFile.length()) {
+                    byte[] keyDirValueBytes = new byte[KeyDirValue.SIZE];
+                    hintFile.read(keyDirValueBytes);
+
+                    KeyDirValue value = new KeyDirValue(keyDirValueBytes);
+                    KeyDirValue currentValue = keyDir.get(value.getFileID());
+
+                    if (currentValue == null || currentValue.getTimestamp() < value.getTimestamp()) {
+                        keyDir.put(value.getFileID(), value);
+                    }
+                }
+            } catch (IOException e) {
+                logger.severe("Failed to read from the hint file");
+            }
         }
     }
 
@@ -58,7 +85,6 @@ public class BitcaskDAO implements DAO {
             this.activeFile = new RandomAccessFile(file, "rws");
         } catch (IOException e) {
             logger.severe("Failed to create the active bitcask file");
-            System.exit(1);
         }
     }
 
