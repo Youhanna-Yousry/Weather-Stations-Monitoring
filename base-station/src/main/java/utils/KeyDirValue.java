@@ -34,7 +34,7 @@ public class KeyDirValue {
     }
 
 
-    private byte[] serializeEntry(long key) {
+    public byte[] serializeEntry(long key) {
         byte[] keyBytes = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(key).array();
         byte[] fileIDBytes = ByteBuffer.allocate(Long.SIZE / Byte.SIZE).putLong(fileID).array();
         byte[] valueSizeBytes = ByteBuffer.allocate(Short.SIZE / Byte.SIZE).putShort(valueSize).array();
