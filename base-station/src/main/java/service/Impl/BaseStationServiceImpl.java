@@ -13,20 +13,17 @@ import java.io.IOException;
 public class BaseStationServiceImpl implements BaseStationService {
 
     @Inject
-    private BitcaskDAO bitcaskDAO;
-
-    @Inject
-    Mapper mapper;
-
-    @Inject
     @Named("BaseStationServiceLogger")
     Logger logger;
+    @Inject
+    Mapper mapper;
+    @Inject
+    private BitcaskDAO bitcaskDAO;
 
     @Override
     public void serveMessage(StationStatusMsgDTO stationStatusMsgDTO) {
         long key = stationStatusMsgDTO.getStationId();
         byte[] value = null;
-
         try {
             value = mapper.serializeStationStatusMsg(stationStatusMsgDTO);
         } catch (IOException e) {
