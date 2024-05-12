@@ -23,7 +23,6 @@ public class BitcaskDAO implements DAO {
     private static final int MERGE_DELAY = 10 * 1000;
     private static final int MERGE_INTERVAL = 2 * 60 * 1000;
 
-    @Named("BitcaskLogger")
     private final Logger logger;
     private final Mapper mapper;
     private final Map<Long, KeyDirValue> globalKeyDir;
@@ -31,7 +30,7 @@ public class BitcaskDAO implements DAO {
     private long activeFileID;
 
     @Inject
-    public BitcaskDAO(Logger logger, Mapper mapper) {
+    public BitcaskDAO(@Named("BitcaskLogger") Logger logger, Mapper mapper) {
         this.logger = logger;
         this.mapper = mapper;
 
@@ -283,8 +282,6 @@ public class BitcaskDAO implements DAO {
                 activeFile.close();
                 createActiveFile();
             }
-
-            activeFile.seek(activeFile.length());
 
             long key = stationStatusMsgDTO.getStationId();
             long timestamp = System.currentTimeMillis();

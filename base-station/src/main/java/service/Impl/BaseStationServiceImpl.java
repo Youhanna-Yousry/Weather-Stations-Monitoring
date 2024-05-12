@@ -14,7 +14,9 @@ public class BaseStationServiceImpl implements BaseStationService {
 
     @Override
     public void serveMessage(StationStatusMsgDTO stationStatusMsgDTO) {
+        System.out.println("Received message: " + stationStatusMsgDTO.toString());
         bitcaskDAO.write(stationStatusMsgDTO);
+        System.out.println("Message saved to Bitcask " + bitcaskDAO.read(stationStatusMsgDTO.getStationId()));
         // TODO save the message to parquet files
     }
 }
