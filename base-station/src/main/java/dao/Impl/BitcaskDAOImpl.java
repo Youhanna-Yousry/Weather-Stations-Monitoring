@@ -2,9 +2,7 @@ package dao.Impl;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import dao.DAO;
-import dto.StationStatusMsgDTO;
-import mapper.Mapper;
+import dao.BitcaskDAO;
 import org.slf4j.Logger;
 import utils.KeyDirValue;
 
@@ -15,24 +13,22 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.regex.Pattern;
 
-public class BitcaskDAO implements DAO {
+public class BitcaskDAOImpl implements BitcaskDAO {
 
     private static final String BITCASK_BASE_DIRECTORY = "src/main/resources/bitcask";
     private static final int MAX_FILE_SIZE = 1024 * 1024;
     private static final short KEY_SIZE = 8;
-    private static final int MERGE_DELAY = 10 * 1000;
+    private static final int MERGE_DELAY = 60 * 1000;
     private static final int MERGE_INTERVAL = 2 * 60 * 1000;
 
     private final Logger logger;
-    private final Mapper mapper;
     private final Map<Long, KeyDirValue> globalKeyDir;
     private RandomAccessFile activeFile;
     private long activeFileID;
 
     @Inject
-    public BitcaskDAO(@Named("BitcaskLogger") Logger logger, Mapper mapper) {
+    public BitcaskDAOImpl(@Named("BitcaskLogger") Logger logger) {
         this.logger = logger;
-        this.mapper = mapper;
 
         if (!new File(BITCASK_BASE_DIRECTORY).exists()) {
             createDirectory();
@@ -53,12 +49,11 @@ public class BitcaskDAO implements DAO {
         }
     }
 
-    private Map<Long, KeyDirValue> loadKeyDir(Set<String> hintFileNames, Set<String> dataFileNames) {
-        Map<Long, KeyDirValue> keyDir = new HashMap<>();
+    private void getCurrentFiles(Set<String> hintFileNames, Set<String> dataFileNames) {
         Pattern pattern = Pattern.compile("hint-\\d+");
         String hintPrefix = "hint-";
 
-        for (File file: Objects.requireNonNull(new File(BITCASK_BASE_DIRECTORY).listFiles())) {
+        for (File file : Objects.requireNonNull(new File(BITCASK_BASE_DIRECTORY).listFiles())) {
             if (!file.isFile()) {
                 continue;
             }
@@ -73,11 +68,17 @@ public class BitcaskDAO implements DAO {
                 }
             }
         }
+    }
+
+    private Map<Long, KeyDirValue> loadKeyDir(Set<String> hintFileNames, Set<String> dataFileNames) {
+        Map<Long, KeyDirValue> keyDir = new HashMap<>();
+
+        getCurrentFiles(hintFileNames, dataFileNames);
 
         dataFileNames.remove(String.valueOf(activeFileID));
 
         if (!hintFileNames.isEmpty()) {
-            loadHintFiles(hintFileNames,  keyDir);
+            loadHintFiles(hintFileNames, keyDir);
         }
 
         if (!dataFileNames.isEmpty()) {
@@ -88,7 +89,7 @@ public class BitcaskDAO implements DAO {
     }
 
     private void loadHintFiles(Set<String> hintFileNames, Map<Long, KeyDirValue> keyDir) {
-        for (String hintFileName: hintFileNames) {
+        for (String hintFileName : hintFileNames) {
             try (RandomAccessFile hintFile = new RandomAccessFile(BITCASK_BASE_DIRECTORY + "/" + hintFileName, "r")) {
                 while (hintFile.getFilePointer() < hintFile.length()) {
                     byte[] keyBytes = new byte[KEY_SIZE];
@@ -109,12 +110,12 @@ public class BitcaskDAO implements DAO {
     }
 
     private void loadDataFiles(Set<String> dataFileNames, Map<Long, KeyDirValue> keyDir) {
-        for (String dataFileName: dataFileNames) {
+        for (String dataFileName : dataFileNames) {
             try (RandomAccessFile dataFile = new RandomAccessFile(BITCASK_BASE_DIRECTORY + "/" + dataFileName, "r")) {
                 while (dataFile.getFilePointer() < dataFile.length()) {
                     long timestamp = dataFile.readLong();
 
-                    short keySize = dataFile.readShort();
+                    dataFile.readShort();
                     long key = dataFile.readLong();
 
                     short valueSize = dataFile.readShort();
@@ -125,7 +126,7 @@ public class BitcaskDAO implements DAO {
                     updateKeyDir(key, new KeyDirValue(Long.parseLong(dataFileName), valueSize, offset, timestamp), keyDir);
                 }
             } catch (IOException e) {
-                logger.error("Failed to read from the data file: {}", dataFileName,e);
+                logger.error("Failed to read from the data file: {}", dataFileName, e);
             }
         }
     }
@@ -152,14 +153,14 @@ public class BitcaskDAO implements DAO {
     }
 
     private void writeHintFile(Map<Long, KeyDirValue> keyDir, RandomAccessFile hintFile) throws IOException {
-        for (Map.Entry<Long, KeyDirValue> entry: keyDir.entrySet()) {
+        for (Map.Entry<Long, KeyDirValue> entry : keyDir.entrySet()) {
             byte[] serializedEntry = entry.getValue().serializeEntry(entry.getKey());
             hintFile.write(serializedEntry);
         }
     }
 
     private void deleteFiles(Set<String> hintFileNames, Set<String> dataFileNames) {
-        for (String hintFileName: hintFileNames) {
+        for (String hintFileName : hintFileNames) {
             File hintFile = new File(BITCASK_BASE_DIRECTORY + "/" + hintFileName);
             dataFileNames.add(hintFileName.substring(5));
             if (!hintFile.delete()) {
@@ -167,7 +168,7 @@ public class BitcaskDAO implements DAO {
             }
         }
 
-        for (String dataFileName: dataFileNames) {
+        for (String dataFileName : dataFileNames) {
             File file = new File(BITCASK_BASE_DIRECTORY + "/" + dataFileName);
             if (!file.delete()) {
                 logger.error("Failed to delete the data file {}", dataFileName);
@@ -218,7 +219,7 @@ public class BitcaskDAO implements DAO {
                     hintFile.close();
 
                     if (!keyDirIterator.hasNext()) {
-                       continue;
+                        continue;
                     }
 
                     fileID = System.currentTimeMillis();
@@ -260,7 +261,7 @@ public class BitcaskDAO implements DAO {
             logger.error("Failed to close the data and hint files", e);
         }
 
-        for (Map.Entry<Long, KeyDirValue> entry: keyDir.entrySet()) {
+        for (Map.Entry<Long, KeyDirValue> entry : keyDir.entrySet()) {
             syncUpdateKeyDir(entry.getKey(), entry.getValue());
         }
 
@@ -268,44 +269,34 @@ public class BitcaskDAO implements DAO {
     }
 
     @Override
-    public void write(StationStatusMsgDTO stationStatusMsgDTO) {
-        byte[] serializedValue;
-        try {
-            serializedValue = mapper.serializeStationStatusMsg(stationStatusMsgDTO);
-        } catch (IOException e) {
-            logger.error("Failed to serialize station status message", e);
-            return;
-        }
-
+    public void write(long key, byte[] value) {
         try {
             if (activeFile.getFilePointer() >= MAX_FILE_SIZE) {
                 activeFile.close();
                 createActiveFile();
             }
-
-            long key = stationStatusMsgDTO.getStationId();
+            short valueSize = (short) value.length;
             long timestamp = System.currentTimeMillis();
 
             activeFile.writeLong(timestamp);
             activeFile.writeShort(KEY_SIZE);
             activeFile.writeLong(key);
-            activeFile.writeShort(serializedValue.length);
+            activeFile.writeShort(valueSize);
             long offset = activeFile.getFilePointer();
-            activeFile.write(serializedValue);
+            activeFile.write(value);
 
-            syncUpdateKeyDir(key, new KeyDirValue(this.activeFileID, (short) serializedValue.length, offset, timestamp));
+            syncUpdateKeyDir(key, new KeyDirValue(this.activeFileID, valueSize, offset, timestamp));
         } catch (IOException e) {
             logger.error("Failed to write to the bitcask file", e);
         }
-
     }
 
     @Override
-    public StationStatusMsgDTO read(long stationId) {
-        KeyDirValue keyDirValue = globalKeyDir.get(stationId);
+    public byte[] read(long key) {
+        KeyDirValue keyDirValue = globalKeyDir.get(key);
 
         if (keyDirValue == null) {
-            logger.info("Key {} not found in the key directory", stationId);
+            logger.info("Key {} not found in the key directory", key);
             return null;
         }
 
@@ -315,9 +306,9 @@ public class BitcaskDAO implements DAO {
             byte[] value = new byte[keyDirValue.getValueSize()];
             randomAccessFile.read(value);
 
-            return mapper.deserializeStationStatusMsg(value);
+            return value;
         } catch (IOException e) {
-            logger.error("Failed to read from the bitcask file", e);
+            logger.error("Failed to read key: {} from the bitcask file", key, e);
             return null;
         }
     }
