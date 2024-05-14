@@ -44,7 +44,7 @@ public class ArchiveToParquet {
             WEATHER_SCHEMA = new Schema.Parser().parse(IOUtils.toString(weatherStream, StandardCharsets.UTF_8));
             System.out.println("Schema: " + STATUS_SCHEMA.toString());
         } catch (IOException e) {
-            final Logger LOGGER = LoggerFactory.getLogger(ParquetWriterWithAvro.class);
+            final Logger LOGGER = LoggerFactory.getLogger(ArchiveToParquet.class);
             LOGGER.error("Can't read SCHEMA file from {}", STATUS_SCHEMA_LOCATION);
             throw new RuntimeException(e);
         }
