@@ -67,7 +67,7 @@ public class BaseStationConsumerImpl implements BaseStationConsumer {
                 }
             }
         } catch (IOException e) {
-            logger.error(e.getMessage());
+            logger.error("Failed to consume messages", e);
         }
 
     }
