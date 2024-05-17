@@ -1,4 +1,5 @@
-package KafkaProcessor.service;
+package service;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
@@ -9,10 +10,12 @@ import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
+
 import java.io.IOException;
 import java.util.Properties;
+
 import dto.CompactStationMsgDTO;
-import dto.WeatherDTO;
+
 import org.apache.kafka.streams.kstream.Produced;
 
 public class WeatherStationProcessor {
@@ -30,16 +33,12 @@ public class WeatherStationProcessor {
         );
         KStream<Long, String> rainEvents = stream
                 .filter((key, value) ->
-                    value.getWeather().getHumidity() > 70)
+                        value.getWeather().getHumidity() > 70)
                 .mapValues(value -> "High humidity detected at Station with sequence: " + value.getSequenceNumber());
 
         rainEvents.to("rainy-topic", Produced.with(Serdes.Long(), Serdes.String()));
 
-        rainEvents.foreach((key, value) -> {
-
-            System.out.println("stationID " + key + ", Data: " + value);
-
-        });
+        rainEvents.foreach((key, value) -> System.out.println("stationID " + key + ", Data: " + value));
 
         final KafkaStreams streams = new KafkaStreams(builder.build(), props);
         streams.start();
@@ -47,12 +46,13 @@ public class WeatherStationProcessor {
         // Attach shutdown hook to catch control-c
         Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
     }
+
     public static Serde<CompactStationMsgDTO> getCompactStationMsgDTOSerde() {
         return Serdes.serdeFrom(new CompactStationMsgDTOSerializer(), new CompactStationMsgDTODeserializer());
     }
 
     public static class CompactStationMsgDTODeserializer implements Deserializer<CompactStationMsgDTO> {
-        private ObjectMapper mapper = new ObjectMapper();
+        private final ObjectMapper mapper = new ObjectMapper();
 
         @Override
         public CompactStationMsgDTO deserialize(String topic, byte[] data) {
@@ -64,11 +64,12 @@ public class WeatherStationProcessor {
         }
 
         @Override
-        public void close() {}
+        public void close() {
+        }
     }
 
     public static class CompactStationMsgDTOSerializer implements Serializer<CompactStationMsgDTO> {
-        private ObjectMapper mapper = new ObjectMapper();
+        private final ObjectMapper mapper = new ObjectMapper();
 
         @Override
         public byte[] serialize(String topic, CompactStationMsgDTO data) {
@@ -81,7 +82,7 @@ public class WeatherStationProcessor {
 
         @Override
         public void close() {
-            // Nothing to do
+
         }
     }
 

@@ -1,4 +1,4 @@
-package service.impl;
+package utils.controller;
 
 import dto.WeatherDTO;
 import org.json.JSONArray;
@@ -16,10 +16,7 @@ public class OpenMeteoImpl {
     private final String url;
 
     public OpenMeteoImpl(String latitude, String longitude) {
-        this.url = "https://api.open-meteo.com/v1/forecast?latitude=" + latitude +
-                "&longitude=" + longitude + "&hourly=temperature_2m,relativehumidity_2m,windspeed_10m" +
-                "&current_weather=true&temperature_unit=fahrenheit&timeformat=unixtime" +
-                "&forecast_days=1&timezone=Africa%2FCairo";
+        this.url = "https://api.open-meteo.com/v1/forecast?latitude=" + latitude + "&longitude=" + longitude + "&hourly=temperature_2m,relativehumidity_2m,windspeed_10m" + "&current_weather=true&temperature_unit=fahrenheit&timeformat=unixtime" + "&forecast_days=1&timezone=Africa%2FCairo";
     }
 
     private String fetchDataFromOpenMeteo() {
@@ -60,9 +57,5 @@ public class OpenMeteoImpl {
         return weatherData;
     }
 
-    //public static void main(String[] ags) throws JSONException {
-      //  List<WeatherDTO> weather = new OpenMeteoImpl("30.0444", "31.2357").fetchHourlyWeatherData();
-       // System.out.println(weather);
-    //}
 
 }
