@@ -19,6 +19,7 @@ import dto.CompactStationMsgDTO;
 import org.apache.kafka.streams.kstream.Produced;
 
 public class WeatherStationProcessor {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static void main(String[] args) {
         Properties props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "weather-station-processor");
@@ -52,12 +53,11 @@ public class WeatherStationProcessor {
     }
 
     public static class CompactStationMsgDTODeserializer implements Deserializer<CompactStationMsgDTO> {
-        private final ObjectMapper mapper = new ObjectMapper();
 
         @Override
         public CompactStationMsgDTO deserialize(String topic, byte[] data) {
             try {
-                return mapper.readValue(data, CompactStationMsgDTO.class);
+                return OBJECT_MAPPER.readValue(data, CompactStationMsgDTO.class);
             } catch (IOException e) {
                 throw new RuntimeException("Error deserializing JSON message", e);
             }
@@ -69,12 +69,12 @@ public class WeatherStationProcessor {
     }
 
     public static class CompactStationMsgDTOSerializer implements Serializer<CompactStationMsgDTO> {
-        private final ObjectMapper mapper = new ObjectMapper();
+
 
         @Override
         public byte[] serialize(String topic, CompactStationMsgDTO data) {
             try {
-                return mapper.writeValueAsBytes(data);
+                return OBJECT_MAPPER.writeValueAsBytes(data);
             } catch (IOException e) {
                 throw new RuntimeException("Error serializing to JSON", e);
             }
