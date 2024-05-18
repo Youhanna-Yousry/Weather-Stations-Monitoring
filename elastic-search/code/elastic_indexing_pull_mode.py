@@ -71,23 +71,6 @@ def is_file_complete(file_path, wait_time=0.1):
             # File is still being written; wait and retry
             time.sleep(wait_time)
 
-
-# def is_file_complete(file_path, wait_time=1):
-#     """
-#     Check if a file is completely written by monitoring its size.
-#     :param file_path: Path to the file.
-#     :param wait_time: Time to wait between size checks in seconds.
-#     :param max_checks: Maximum number of checks.
-#     :return: True if the file is complete, False otherwise.
-#     """
-#     file_size = -1
-#     while True:
-#         current_size = os.path.getsize(file_path)
-#         if current_size == file_size:
-#             return True
-#         file_size = current_size
-#         time.sleep(wait_time)
-
 class ParquetFileHandler(FileSystemEventHandler):
     def __init__(self, es):
         self.es = es
@@ -97,7 +80,7 @@ class ParquetFileHandler(FileSystemEventHandler):
             process_file(self.es, event.src_path)
 
 if __name__ == "__main__":
-    root_dir = 'F:\\handasa\\level_4\\term_2\\Data_Intensive\\Assignments\\5Project\\code\\Weather-Stations-Monitoring\\base-station\\src\\main\\resources\\archiving_files\\archive'
+    root_dir = 'Weather-Stations-Monitoring/base-station/src/main/resources/archiving_files/archive'
     es = connect_elasticsearch()
     
     # Process existing files in the directory initially
