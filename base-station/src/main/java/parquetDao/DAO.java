@@ -1,9 +1,9 @@
-package dao;
+package parquetDao;
 
 import dto.StationStatusMsgDTO;
 
 // NOTE: This is an initial version of the interface. It is subject to change.
 public interface DAO {
 
-    void write(StationStatusMsgDTO stationStatusMsgDTO);
+    void writeToParquet(StationStatusMsgDTO stationStatusMsgDTO);
 }
