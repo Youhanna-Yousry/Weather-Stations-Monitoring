@@ -1,20 +1,20 @@
-  apiVersion: apps/v1
-  kind: Deployment
-  metadata:
-    name: base-station
-    labels:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: base-station-deployment
+  labels:
+    app: base-station
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
       app: base-station
-  spec:
-    replicas: 1
-    selector:
-      matchLabels:
+  template:
+    metadata:
+      labels:
         app: base-station
-    template:
-      metadata:
-        labels:
-          app: base-station
-      spec:
-        containers:
-        - name: base-station
-          image: base-station:latest       
-          imagePullPolicy: Never
+    spec:
+      containers:
+      - name: base-station
+        image: base-station:latest       
+        imagePullPolicy: Never

@@ -23,6 +23,14 @@ spec:
         env:
         - name: KAFKA_CFG_ZOOKEEPER_CONNECT
           value: zookeeper-service:2181
+        - name: ALLOW_PLAINTEXT_LISTENER
+          value: "yes"
+        - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+          value: "1"
+        - name: KAFKA_ADVERTISED_LISTENERS
+          value: "PLAINTEXT://kafka-service:9092"
+        - name: KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE
+          value: "true"
 ---
 apiVersion: v1
 kind: Service

@@ -24,7 +24,7 @@ public class BaseStationConsumerImpl implements BaseStationConsumer {
 
     private static final String TOPIC = "weather-station-topic";
     private static final String GROUP_ID = "weather-station-group";
-    private static final String BOOTSTRAP_SERVER = "localhost:9092";
+    private static final String BOOTSTRAP_SERVER = "kafka-service:9092";
     private static final String ENABLE_AUTO_COMMIT = "true";
     private static final String AUTO_COMMIT_INTERVAL = "1000";
     private static final String AUTO_OFFSET_RESET = "earliest";

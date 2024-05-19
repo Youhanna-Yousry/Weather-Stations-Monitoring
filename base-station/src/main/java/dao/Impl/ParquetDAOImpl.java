@@ -1,12 +1,13 @@
 package dao.Impl;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import dao.ParquetDAO;
 import dto.StationStatusMsgDTO;
 import dto.WeatherDTO;
+import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.commons.io.IOUtils;
-import org.apache.avro.Schema;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -15,8 +16,8 @@ import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.joda.time.LocalDate;
-import com.google.inject.name.Named;
 import org.slf4j.Logger;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -79,7 +80,7 @@ public class ParquetDAOImpl implements ParquetDAO {
 
     /* Extracting Date */
     private String checkDate(Long time, Long stationId) {
-        LocalDate localDate = new org.joda.time.LocalDate(new Date(time));
+        LocalDate localDate = new LocalDate(new Date(time));
         String date =
                 localDate.getDayOfMonth() + "-"
                 + localDate.getMonthOfYear() + "-"

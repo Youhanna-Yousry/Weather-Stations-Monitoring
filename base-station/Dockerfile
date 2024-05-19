@@ -6,6 +6,9 @@ FROM maven:3.9.6-eclipse-temurin-21-alpine
 # Set the working directory
 WORKDIR /app
 
+# Download and install Python and required packages
+RUN apk add --no-cache python3 py3-pandas py3-elasticsearch py3-watchdog py3-arrow
+
 # Copy the pom.xml file to the working directory
 COPY pom.xml /app
 

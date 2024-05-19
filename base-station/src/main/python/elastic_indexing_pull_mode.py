@@ -27,7 +27,7 @@ def connect_elasticsearch():
 def index_data(es, df, index_name):
     # Convert DataFrame to JSON format
     records = df.to_dict(orient='records')
-    
+
     # Prepare actions for bulk indexing
     actions = [
         {
@@ -36,7 +36,7 @@ def index_data(es, df, index_name):
         }
         for record in records
     ]
-    
+
     # Perform bulk indexing
     helpers.bulk(es, actions)
     print(f"Indexed {len(records)} records into {index_name}")
@@ -82,7 +82,7 @@ class ParquetFileHandler(FileSystemEventHandler):
 if __name__ == "__main__":
     root_dir = 'Weather-Stations-Monitoring/base-station/src/main/resources/archiving_files/archive'
     es = connect_elasticsearch()
-    
+
     # Process existing files in the directory initially
     for station_dir in os.listdir(root_dir):
         station_path = os.path.join(root_dir, station_dir)
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     observer = Observer()
     observer.schedule(event_handler, path=root_dir, recursive=True)
     observer.start()
-    
+
     try:
         while True:
             time.sleep(1)
