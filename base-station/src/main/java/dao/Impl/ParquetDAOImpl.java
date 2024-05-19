@@ -1,5 +1,7 @@
-package parquetDao;
+package dao.Impl;
 
+import com.google.inject.Inject;
+import dao.ParquetDAO;
 import dto.StationStatusMsgDTO;
 import dto.WeatherDTO;
 import org.apache.avro.generic.GenericData;
@@ -13,8 +15,8 @@ import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.joda.time.LocalDate;
+import com.google.inject.name.Named;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,33 +24,37 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class ArchiveToParquet implements DAO {
 
-    private static final Schema STATUS_SCHEMA;
-    private static final Schema WEATHER_SCHEMA;
+public class ParquetDAOImpl implements ParquetDAO {
+
+    private Schema STATUS_SCHEMA;
+    private Schema WEATHER_SCHEMA;
     private static final String STATUS_SCHEMA_LOCATION = "src/main/resources/archiving_files/avroSchema.avsc";
     private static final String WEATHER_SCHEMA_LOCATION= "src/main/resources/archiving_files/innerAvroSchema.avsc";
     private static final String ARCHIVE_DIRECTORY = "src/main/resources/archiving_files/archive/";
     private static final int BATCH_SIZE = 10_000; // batch size is 10k, but when testing small functionalities: we may need to change this value.
     private Map<Long, Map<String, List<GenericData.Record>>> buffers;
     private int buffersSize;
+    private final Logger LOGGER;
 
-    static {
+    @Inject
+    public ParquetDAOImpl(@Named("ParquetLogger") Logger LOGGER) {
+        buffers = new HashMap<>();
+        buffersSize = 0;
+        this.LOGGER = LOGGER;
+        defineSchemas();
+    }
+
+    private void defineSchemas() {
         try(InputStream statusStream = new FileInputStream(STATUS_SCHEMA_LOCATION);
             InputStream weatherStream= new FileInputStream(WEATHER_SCHEMA_LOCATION))
         {
             STATUS_SCHEMA = new Schema.Parser().parse(IOUtils.toString(statusStream, StandardCharsets.UTF_8));
             WEATHER_SCHEMA = new Schema.Parser().parse(IOUtils.toString(weatherStream, StandardCharsets.UTF_8));
         } catch (IOException e) {
-            final Logger LOGGER = LoggerFactory.getLogger(ArchiveToParquet.class);
             LOGGER.error("Can't read SCHEMA file from {}", STATUS_SCHEMA_LOCATION);
             throw new RuntimeException(e);
         }
-    }
-
-    public ArchiveToParquet() {
-        buffers = new HashMap<>();
-        buffersSize = 0;
     }
 
     public void writeToParquet(StationStatusMsgDTO stationStatusMsgDTO) {
