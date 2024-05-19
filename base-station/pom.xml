@@ -18,6 +18,7 @@
         <lombok.version>1.18.32</lombok.version>
         <mapstruct.version>1.6.0.Beta1</mapstruct.version>
         <slf4j.version>2.0.13</slf4j.version>
+        <elasticsearch.version>8.4.0</elasticsearch.version>
     </properties>
 
     <build>
@@ -140,6 +141,17 @@
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
             <version>2.10.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-client</artifactId>
+            <version>8.13.4</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-high-level-client</artifactId>
+            <version>7.17.21</version>
         </dependency>
     </dependencies>
 </project>

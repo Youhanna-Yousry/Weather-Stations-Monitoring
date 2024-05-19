@@ -18,6 +18,7 @@ import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,7 +44,14 @@ public class ParquetDAOImpl implements ParquetDAO {
         buffers = new HashMap<>();
         buffersSize = 0;
         this.LOGGER = LOGGER;
+        createDirectory();
         defineSchemas();
+    }
+
+    private void createDirectory() {
+        if (!new File(ARCHIVE_DIRECTORY).mkdir()) {
+            LOGGER.error("Failed to create the parquet directory");
+        }
     }
 
     private void defineSchemas() {
