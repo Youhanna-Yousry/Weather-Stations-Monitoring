@@ -20,7 +20,8 @@ import org.apache.kafka.streams.kstream.Produced;
 
 public class WeatherStationProcessor {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    public static void main(String[] args) {
+
+    public void start() {
         Properties props = new Properties();
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "weather-station-processor");
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
@@ -62,6 +63,7 @@ public class WeatherStationProcessor {
                 throw new RuntimeException("Error deserializing JSON message", e);
             }
         }
+
 
         @Override
         public void close() {
