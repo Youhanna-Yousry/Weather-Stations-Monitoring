@@ -35,7 +35,6 @@ public class ParquetDAOImpl implements ParquetDAO {
     private static final int BATCH_SIZE = 10_000; // batch size is 10k, but when testing small functionalities: we may need to change this value.
     private Map<Long, Map<String, List<GenericData.Record>>> buffers;
     private int buffersSize;
-    @Inject
     private final Logger LOGGER;
 
     @Inject
