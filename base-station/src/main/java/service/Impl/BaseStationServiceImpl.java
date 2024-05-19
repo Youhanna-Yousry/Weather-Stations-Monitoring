@@ -1,5 +1,6 @@
 package service.Impl;
 
+import dao.ParquetDAO;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import dao.BitcaskDAO;
@@ -19,9 +20,14 @@ public class BaseStationServiceImpl implements BaseStationService {
     Mapper mapper;
     @Inject
     private BitcaskDAO bitcaskDAO;
+    @Inject
+    private ParquetDAO parquetDAO;
+
 
     @Override
     public void serveMessage(StationStatusMsgDTO stationStatusMsgDTO) {
+
+        // save the message to bitcask
         long key = stationStatusMsgDTO.getStationId();
         byte[] value = null;
         try {
@@ -32,6 +38,7 @@ public class BaseStationServiceImpl implements BaseStationService {
 
         bitcaskDAO.write(key, value);
 
-        // TODO save the message to parquet files
+        // save the message to parquet files
+        parquetDAO.writeToParquet(stationStatusMsgDTO);
     }
 }
