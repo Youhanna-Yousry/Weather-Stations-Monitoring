@@ -2,6 +2,8 @@ package service.Impl;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -25,13 +27,34 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     private static final String ARCHIVE_PATH = "src/main/resources/archiving_files/archive";
     private final Set<Path> parquetFiles = new HashSet<>();
+    private static final String SCHEMA_JSON = "{"
+            + "\"type\": \"record\","
+            + "\"name\": \"StationStatusMsgDTO\","
+            + "\"namespace\": \"dto\","
+            + "\"fields\": ["
+            + "{\"name\": \"stationId\", \"type\": \"long\"},"
+            + "{\"name\": \"sequenceNumber\", \"type\": \"long\"},"
+            + "{\"name\": \"batteryStatus\", \"type\": \"string\"},"
+            + "{\"name\": \"statusTimestamp\", \"type\": \"long\"},"
+            + "{\"name\": \"weather\", \"type\": {"
+            + "\"type\": \"record\","
+            + "\"name\": \"WeatherDTO\","
+            + "\"fields\": ["
+            + "{\"name\": \"humidity\", \"type\": \"int\"},"
+            + "{\"name\": \"temperature\", \"type\": \"int\"},"
+            + "{\"name\": \"windSpeed\", \"type\": \"int\"}"
+            + "]}}"
+            + "]}";
 
     @Inject
     @Named("ElasticsearchLogger")
     private Logger logger;
 
+    private Schema avroSchema;
+
     @Override
     public void start() {
+        avroSchema = new Schema.Parser().parse(SCHEMA_JSON);
         Thread thread = new Thread(this::indexForGood);
         thread.start();
     }
@@ -76,14 +99,15 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
     private List<String> readRecords(String parquetFile) throws IOException {
         List<String> records = new ArrayList<>();
 
-        ParquetReader<GenericRecord> reader = AvroParquetReader
-                .<GenericRecord>builder(new org.apache.hadoop.fs.Path(parquetFile))
-                .build();
+        try (ParquetReader<GenericRecord> reader = AvroParquetReader.<GenericRecord>builder(new org.apache.hadoop.fs.Path(parquetFile)).withDataModel(GenericData.get()).build()) {
+            GenericRecord nextRecord;
 
-        GenericRecord nextRecord;
-
-        while ((nextRecord = reader.read()) != null) {
-            records.add(nextRecord.toString());
+            while ((nextRecord = reader.read()) != null) {
+                records.add(nextRecord.toString());
+            }
+        } catch (Exception e) {
+            logger.error("Failed to read parquet file: " + parquetFile, e);
+            throw new IOException("Failed to read parquet file", e);
         }
 
         return records;
@@ -91,15 +115,21 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
 
     private void indexRecords(List<String> records) {
         try (RestClient restClient = RestClient.builder(new HttpHost("elasticsearch-service", 9200, "http")).build()) {
+            Response response = null;
             for (String record : records) {
                 HttpEntity entity = new NStringEntity(record, ContentType.APPLICATION_JSON);
                 Request request = new Request("POST", "/data/_doc");
                 request.setEntity(entity);
-                Response response = restClient.performRequest(request);
-                logger.info("Record indexed: {}", response.getStatusLine().getStatusCode());
+                response = restClient.performRequest(request);
             }
+            logger.info("Record indexed: {}", response.getStatusLine().getStatusCode());
         } catch (IOException e) {
             logger.error("Failed to index records", e);
         }
+    }
+
+    public static void main(String[] args) {
+        ElasticsearchServiceImpl service = new ElasticsearchServiceImpl();
+        service.start();
     }
 }
