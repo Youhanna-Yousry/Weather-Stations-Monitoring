@@ -81,12 +81,17 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
                 this.parquetFiles.add(parquetFile);
             }
         } catch (Exception e) {
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException ex) {
-                logger.error("Failed to sleep", ex);
-            }
             logger.error("Failed to index parquet files", e);
+        }
+        sleepSafely(10000);
+    }
+
+
+    private void sleepSafely(int millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            logger.error("Failed to sleep", e);
         }
     }
 
@@ -128,10 +133,5 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
         } catch (IOException e) {
             logger.error("Failed to index records", e);
         }
-    }
-
-    public static void main(String[] args) {
-        ElasticsearchServiceImpl service = new ElasticsearchServiceImpl();
-        service.start();
     }
 }
