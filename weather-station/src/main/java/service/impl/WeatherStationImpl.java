@@ -27,7 +27,7 @@ import static utils.helpers.*;
 
 public class WeatherStationImpl implements WeatherStation {
     private static final String TOPIC = "weather-station-topic";
-    private static final String BOOTSTRAP_SERVER = "localhost:9092";
+    private static final String BOOTSTRAP_SERVER = "kafka-service:9092";
     private final AtomicInteger sequenceNumber = new AtomicInteger(0);
     private final long stationID;
     private final String latitude;

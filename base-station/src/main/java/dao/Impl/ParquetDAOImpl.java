@@ -33,8 +33,8 @@ public class ParquetDAOImpl implements ParquetDAO {
     private Schema WEATHER_SCHEMA;
     private static final String STATUS_SCHEMA_LOCATION = "src/main/resources/archiving_files/avroSchema.avsc";
     private static final String WEATHER_SCHEMA_LOCATION= "src/main/resources/archiving_files/innerAvroSchema.avsc";
-    private static final String ARCHIVE_DIRECTORY = "src/main/resources/archiving_files/archive/";
-    private static final int BATCH_SIZE = 10_000; // batch size is 10k, but when testing small functionalities: we may need to change this value.
+    public static final String ARCHIVE_DIRECTORY = "/mnt/parquet/";
+    private static final int BATCH_SIZE = 1000; // batch size is 10k, but when testing small functionalities: we may need to change this value.
     private Map<Long, Map<String, List<GenericData.Record>>> buffers;
     private int buffersSize;
     private final Logger LOGGER;

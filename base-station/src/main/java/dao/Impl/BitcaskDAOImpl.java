@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 
 public class BitcaskDAOImpl implements BitcaskDAO {
 
-    private static final String BITCASK_BASE_DIRECTORY = "src/main/resources/bitcask";
+    private static final String BITCASK_BASE_DIRECTORY = "/app/src/bitcask/";
     private static final int MAX_FILE_SIZE = 1024 * 1024;
     private static final short KEY_SIZE = 8;
     private static final int MERGE_DELAY = 60 * 1000;

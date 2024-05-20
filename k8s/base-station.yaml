@@ -18,3 +18,15 @@ spec:
       - name: base-station
         image: base-station:latest       
         imagePullPolicy: Never
+        volumeMounts:
+          - mountPath: /app/src/bitcask/
+            name: bitcask-mount
+          - mountPath: /mnt/parquet/
+            name: parquet-mount
+      volumes:
+      - name: bitcask-mount
+        persistentVolumeClaim:
+          claimName: bitcask-pvc
+      - name: parquet-mount
+        persistentVolumeClaim:
+          claimName: parquet-pvc

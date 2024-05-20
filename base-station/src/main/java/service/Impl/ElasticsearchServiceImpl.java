@@ -2,6 +2,9 @@ package service.Impl;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+
+import dao.Impl.ParquetDAOImpl;
+
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
@@ -25,7 +28,7 @@ import java.util.stream.Stream;
 
 public class ElasticsearchServiceImpl implements ElasticsearchService {
 
-    private static final String ARCHIVE_PATH = "src/main/resources/archiving_files/archive";
+    private static final String ARCHIVE_PATH = ParquetDAOImpl.ARCHIVE_DIRECTORY;
     private final Set<Path> parquetFiles = new HashSet<>();
     private static final String SCHEMA_JSON = "{"
             + "\"type\": \"record\","
@@ -77,7 +80,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
                 indexRecords(records);
                 this.parquetFiles.add(parquetFile);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             try {
                 Thread.sleep(10000);
             } catch (InterruptedException ex) {
@@ -106,8 +109,7 @@ public class ElasticsearchServiceImpl implements ElasticsearchService {
                 records.add(nextRecord.toString());
             }
         } catch (Exception e) {
-            logger.error("Failed to read parquet file: " + parquetFile, e);
-            throw new IOException("Failed to read parquet file", e);
+            logger.error("Failed to read parquet file: {}", parquetFile, e);
         }
 
         return records;
