@@ -1,4 +1,4 @@
-# Description: Dockerfile for the base station application
+# docker file of kafka processor
 
 # Use the Maven image as the base image
 FROM maven:3.9.6-eclipse-temurin-21-alpine

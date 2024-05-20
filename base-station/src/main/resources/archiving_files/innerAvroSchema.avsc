@@ -1,0 +1,9 @@
+{
+  "type": "record",
+  "name": "WeatherDTO",
+  "fields": [
+    {"name": "humidity", "type": "int"},
+    {"name": "temperature", "type": "int"},
+    {"name": "windSpeed", "type": "int"}
+  ]
+}

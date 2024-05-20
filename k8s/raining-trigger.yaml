@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: raining-trigger-deployment
+  labels:
+    app: raining-trigger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: raining-trigger
+  template:
+    metadata:
+      labels:
+        app: raining-trigger
+    spec:
+      containers:
+      - name: raining-trigger
+        image: raining-trigger:latest       
+        imagePullPolicy: Never
