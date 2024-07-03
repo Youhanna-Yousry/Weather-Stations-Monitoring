@@ -7,14 +7,11 @@
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [System Architecture](#system-architecture)
-  - [Installation](#installation)
   - [Implementation](#implementation)
     - [Weather Station Mock](#weather-station-mock)
     - [Raining Triggers in Kafka Processors](#raining-triggers-in-kafka-processors)
     - [Central Base Station](#central-base-station)
       - [Bitcask archiving](#bitcask-archiving)
-        - [KeyDirValue Content](#keydirvalue-content)
-        - [Record Saved in Data Files](#record-saved-in-data-files)
       - [Parquet archiving](#parquet-archiving)
       - [Historical Weather Statuses Analysis](#historical-weather-statuses-analysis)
     - [Deploying with Kubernetes](#deploying-with-kubernetes)
@@ -41,12 +38,6 @@ The system is composed of three stages:
    - Key-value store (Bitcask) for the latest reading from each individual station.
    - ElasticSearch / Kibana running over the Parquet files.
 
-## Installation
-
-To set up the cluster, you need:
-
-1. Docker
-2. Minikube
 
 ## Implementation
 
@@ -76,9 +67,6 @@ This ensures that all weather data is streamed in real-time to the Kafka server,
 Kafka Processors is used to detect if humidity is higher than 70% and a special message is output to a specific topic in Kafka. This special message is shown as follow:
 ```High humidity detected at Station with sequence: {sequence_number}```
 
-Sure! Here’s the updated README with the new section for BitCask and the relevant details moved from the Central Station section. All sections are placed inside the Base Station section.
-
----
 
 ### Central Base Station
 
@@ -86,23 +74,7 @@ The base station was responsible for processing, storing, and analyzing weather 
 
 #### Bitcask archiving
 
-We implemented BitCask Riak to store updated views of weather statuses. This allowed us to maintain an updated store of each station's status. Additionally, we archived all weather statuses history for all stations into Parquet files for efficient data storage and retrieval.
-
-##### KeyDirValue Content
-
-The KeyDirValue content is structured as follows:
-
-|   fileID  | valueSize | valueOffset | timestamp |
-| --------- | --------- | ----------- | --------- |
-|  8 bytes  |  2 bytes  |   8 bytes   |  8 bytes  |
-
-##### Record Saved in Data Files
-
-Records saved in data files follow this format:
-
-| timestamp  | keySize | key   | valueSize | value     |
-| ---------- | ------- | ----- | --------- | --------- |
-|   8 bytes  | 2 bytes | 8 bytes |  2 bytes  | variable  |
+We implemented BitCask Riak to store last sent status of each weather station.
 
 #### Parquet archiving
 
@@ -117,7 +89,12 @@ The following picture shows the kiabana dashboard:
 
 ### Deploying with Kubernetes
 
-Write Dockerfiles and Kubernetes yaml files to deploy the services.
+A total of 16 services were deployed:
+- 10 services with image for the weather station
+- 1 service with image for base station
+- 1 service with image for raining trigger
+- 2 services one for kafka and one for zookeeper
+- 2 services one for elasticsearch and one for kiabana
 
 ### Profiling Central Station
 
